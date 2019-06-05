@@ -1,0 +1,21 @@
+# Any of the following configuration parameters can be overridden through
+# command line arguments
+environment:
+    host:
+# user credentials with wich the requests to the REST api will be performed (an
+# thus, also, to which resources the script will have access)
+credentials:
+    user:
+    passwd:
+request:
+    # any query parameters that should go with each request can be specified
+    # here
+    query_params:
+        # set the nrOfResults to zero so that all results will be fetched in
+        # one go (should not be more than 5000 items though)
+        nrOfResults: 0
+    # any headers that should go with each request can be specified here
+    headers:
+         accept: application/vnd.mediahaven.v2+json
+    # default timeout value for every request
+    timeout: 10
