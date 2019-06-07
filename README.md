@@ -5,6 +5,7 @@ Script to report on batches in the archiving backend.
 ## Prerequisites
 
 - Python 3
+- Python 3 virtualenv
 
 Check your Python version with:
 
@@ -25,6 +26,10 @@ or:
       $ python3 -m venv .
 
     (notice the `.` at the end)
+
+- Activate the virtual environment
+
+      $ source bin/activate
 
 - Install requirements
 
