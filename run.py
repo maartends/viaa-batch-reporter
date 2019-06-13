@@ -16,23 +16,20 @@
 #
 #  export HTTP_PROXY='http://proxy:80'
 #  export HTTPS_PROXY='https://proxy:80'
-#  
+#
 #######################################################################
 
-import os
+# Standard imports
 import sys
 import logging
 import argparse
 import csv
 import yaml
 import re
-import json
 import urllib.parse
-from collections import OrderedDict
-# 3d party
+# 3d party imports
 import requests
 from requests.adapters import HTTPAdapter
-from requests.exceptions import ConnectTimeout, ReadTimeout
 from requests.packages.urllib3.util.retry import Retry
 
 # Create logger
@@ -66,12 +63,6 @@ with open(DEFAULT_CFG_FILE, 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 # PRD Public base url
 MH_BASE_URL = cfg['environment']['host']
-#
-PROXIES = {
-  'http'    : 'http://proxy:80',
-  'https'   : 'https://proxy:80'
-}
-
 
 TIMEOUT         = cfg['request']['timeout']
 REQ_PARAMS      = cfg['request']['query_params']
@@ -81,25 +72,27 @@ REQ_SESSION.headers.update(REQ_HEADERS)
 REQ_SESSION.auth = (cfg['credentials']['user'],
                     cfg['credentials']['passwd'])
 SESS_RETRIES    = Retry(total=5, backoff_factor=1,
-                        status_forcelist=[ 502, 503, 504 ])
+                        status_forcelist=[502, 503, 504])
 REQ_SESSION.mount('http://', HTTPAdapter(max_retries=SESS_RETRIES))
 
-CSV_HEADER = ('headers','filename','tape_label','ingest_date')
+CSV_HEADER = ('headers', 'filename', 'tape_label', 'ingest_date')
+
 
 def get_batch_records_mtd(mtd_file):
-    """Returns a list of OrderedDict objects"""
+    """Returns a list"""
     with open(mtd_file, 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
-        l = [x for x in reader]
-    return l
-    
+    return [x for x in reader]
+
+
 def get_batch_records_mh(batch):
     """Returns a list of dict objects"""
-    querystr = {"q":"+(dc_identifier_localidsbatch:%s)" % batch}
+    querystr = {"q": "+(dc_identifier_localidsbatch:%s)" % batch}
     REQ_PARAMS.update(querystr)
     response = REQ_SESSION.get(MH_BASE_URL, params=REQ_PARAMS)
     j = response.json()
     return j
+
 
 def compare_records(mtd_records, mh_records):
     """Compare two list of dicts and return a list of dicts"""
@@ -119,16 +112,20 @@ def compare_records(mtd_records, mh_records):
         })
     return result
 
+
 def get_mh_record(mh_records, filename=None, md5=None):
-    l = list(filter(lambda rec: rec['Descriptive']['Title'] == filename, mh_records))
-    if l:
-        return l[0]
+    res = list(filter(lambda rec:
+                      rec['Descriptive']['Title'] == filename, mh_records))
+    if res:
+        return res[0]
     return None
+
 
 def get_resource(media_id):
     url = urllib.parse.urljoin(MH_BASE_URL, media_id)
     response = REQ_SESSION.get(url)
     return response.json()
+
 
 def format_archivedate(archivedate: str) -> str:
     # `archivedate` comes in EXIF format, so, for example:
@@ -137,29 +134,33 @@ def format_archivedate(archivedate: str) -> str:
     parts = re.findall(r"[\w']+", archivedate)
     return '%s%s%s' % (parts[0], parts[1], parts[2])
 
+
 def write_compare_list(compare_list, batchname):
     """"""
     output_filename = '%s.csv' % batchname
     log.info('Writing to "%s"' % output_filename)
     fieldnames = ['filename', 'status']
     with open(output_filename, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_MINIMAL)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                quoting=csv.QUOTE_MINIMAL)
         writer.writeheader()
         writer.writerows(compare_list)
+
 
 def write_report(records, batchname, status):
     output_filename_fmt = '{nr_of_recs}-{status}-at_viaa-{batchname}.csv'
     output_filename = output_filename_fmt.format(
         nr_of_recs = len(records),
-        status = status,
-        batchname = batchname,
+        status     = status,
+        batchname  = batchname,
     )
     # Make lines
     lines = []
     for record in records:
-        #~ filename = records['Dynamic']['dc_title']
         filename = record['Descriptive']['Title']
-        archivedate = format_archivedate(record['Administrative']['ArchiveDate'])
+        archivedate = format_archivedate(
+            record['Administrative']['ArchiveDate']
+        )
         lines.append((
             filename, 'FTP', archivedate
         ))
@@ -181,15 +182,22 @@ def main(cmd_args):
     mh_records = get_batch_records_mh(cmd_args.batch)
     log.info('# of records in batch: %s' % mh_records['TotalNrOfResults'])
     if cmd_args.mtd:
-        compare_list = compare_records(mtd_records, mh_records['MediaDataList'])
+        compare_list = compare_records(
+            mtd_records,
+            mh_records['MediaDataList']
+        )
         write_compare_list(compare_list, cmd_args.batch)
-    ok_status = 'on_tape'
+    ok_status = cfg['ok_status']
     # Get oks
-    ok_list = [x for x in mh_records['MediaDataList'] if x['Internal']['ArchiveStatus'] == ok_status]
+    ok_list = [
+        x for x in mh_records['MediaDataList'] if
+        x['Internal']['ArchiveStatus'] == ok_status]
     log.debug('ok_list: %s' % len(ok_list))
     write_report(ok_list, cmd_args.batch, 'ok')
     # Get noks
-    nok_list = [x for x in mh_records['MediaDataList'] if x['Internal']['ArchiveStatus'] != ok_status]
+    nok_list = [
+        x for x in mh_records['MediaDataList'] if
+        x['Internal']['ArchiveStatus'] != ok_status]
     log.debug('nok_list: %s' % len(nok_list))
     write_report(nok_list, cmd_args.batch, 'nok')
 
@@ -197,15 +205,10 @@ def main(cmd_args):
 if __name__ == '__main__':
     # Parse the command line
     parser = argparse.ArgumentParser(prog="batch-reporter",
-                description="""Report on batches""")
+                                     description="""Report on batches""")
     parser.add_argument(dest='batch', type=str, help='''Specify batchname.''')
     parser.add_argument('-m', '--mtd', dest='mtd',
-        required=False, help='''Filepath to mtd (csv) file.''')
-    #parser.add_argument('-d', '--dryrun', dest='dryrun',
-    #    required=False, action='store_true', default=False,
-    #    help='''Practice run, ie., display the operations that would be
-    #    performed using the specified command without actually running
-    #    them. Only makes sense in non-safe (destructive) operations. (TBI)''')
+                        required=False, help='''Filepath to mtd (csv) file.''')
     cmd_args = parser.parse_args()
     main(cmd_args)
 
