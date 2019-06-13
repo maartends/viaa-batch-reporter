@@ -20,16 +20,18 @@ or:
 - First, clone this repository
 
       $ git clone git@github.com:maartends/viaa-batch-reporter.git
-or
+
+  or
+
       $ git clone https://github.com/maartends/viaa-batch-reporter.git
 
 ### Make
 
-`cd` into the cloned directory:
+- `cd` into the cloned directory:
 
       $ cd viaa-batch-reporter
 
-Then, just:
+- Then, just:
 
       $ make install
 
