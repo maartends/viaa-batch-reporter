@@ -17,9 +17,23 @@ or:
 
 ## Installation
 
-- Clone this repository
+- First, clone this repository
 
       $ git clone git@github.com:maartends/viaa-batch-reporter.git
+or
+      $ git clone https://github.com/maartends/viaa-batch-reporter.git
+
+### Make
+
+`cd` into the cloned directory:
+
+      $ cd viaa-batch-reporter
+
+Then, just:
+
+      $ make install
+
+### Manual
 
 - cd into the cloned directory and create a python virtual environment
 
