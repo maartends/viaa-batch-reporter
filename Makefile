@@ -21,23 +21,23 @@ make-help:
 
 install-req:
 	@echo "[INSTALL-REQ]: Install requirements..."
-	source bin/activate
-	pip install wheel
-	pip install -r requirements.txt
+	source bin/activate; \
+		pip install wheel; \
+		pip install -r requirements.txt
 
 help:
 	@echo "[HELP]: show script options"
-	source bin/activate
-	./report -h
+	source bin/activate; \
+		./report -h
 
 lint:
 	@echo "[LINT]: Run Flake8 linter on code syntax"
-	source bin/activate
-	python -m flake8 --ignore E221,E251 run.py
+	source bin/activate; \
+		python -m flake8 --ignore E221,E251 run.py
 
 mv-config:
 	@echo "[MV-CONFIG]: Rename 'config.yml.example' to 'config.yml'..."
-	mv config.yml.example config.yml
+	cp config.yml.example config.yml
 
 all: init-venv install-req lint mv-config
 	@echo "***********************************************"
