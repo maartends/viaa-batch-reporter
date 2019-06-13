@@ -24,10 +24,10 @@ import sys
 import logging
 import argparse
 import csv
-import yaml
 import re
 import urllib.parse
 # 3d party imports
+import yaml
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -65,7 +65,6 @@ with open(DEFAULT_CFG_FILE, 'r') as ymlfile:
 MH_BASE_URL = cfg['environment']['host']
 
 TIMEOUT         = cfg['request']['timeout']
-REQ_PARAMS      = cfg['request']['query_params']
 REQ_HEADERS     = cfg['request']['headers']
 REQ_SESSION     = requests.Session()
 REQ_SESSION.headers.update(REQ_HEADERS)
@@ -87,9 +86,9 @@ def get_batch_records_mtd(mtd_file):
 
 def get_batch_records_mh(batch):
     """Returns a list of dict objects"""
-    querystr = {"q": "+(dc_identifier_localidsbatch:%s)" % batch}
-    REQ_PARAMS.update(querystr)
-    response = REQ_SESSION.get(MH_BASE_URL, params=REQ_PARAMS)
+    query_params = {"q": "+(dc_identifier_localidsbatch:%s)" % batch,
+                    "nrOfResults": 10000}
+    response = REQ_SESSION.get(MH_BASE_URL, params=query_params)
     j = response.json()
     return j
 
@@ -146,6 +145,26 @@ def write_compare_list(compare_list, batchname):
         writer.writeheader()
         writer.writerows(compare_list)
 
+def write_stdout_report(records):
+    """Output summary of records statusses to stdout."""
+    statusses = ['on_tape', 'in_progress', 'failed']
+    on_tape = len([
+        x for x in records['MediaDataList'] if
+        x['Internal']['ArchiveStatus'] == 'on_tape'])
+    in_progress = len([
+        x for x in records['MediaDataList'] if
+        x['Internal']['ArchiveStatus'] == 'in_progress'])
+    failed = len([
+        x for x in records['MediaDataList'] if
+        x['Internal']['ArchiveStatus'] == 'failed'])
+    print('***************************')
+    print('*  on_tape     = %s *' % on_tape)
+    print('*  in_progress = %s *' % in_progress)
+    print('*  failed      = %s *' % failed)
+    print('*  ------------------')
+    print('*  total       = %s *' % sum([on_tape, in_progress, failed]))
+    print('***************************')
+
 
 def write_report(records, batchname, status):
     output_filename_fmt = '{nr_of_recs}-{status}-at_viaa-{batchname}.csv'
@@ -180,7 +199,7 @@ def main(cmd_args):
     # Get batch records from MediaHaven
     log.info('Getting batch records from MH "%s"' % cmd_args.batch)
     mh_records = get_batch_records_mh(cmd_args.batch)
-    log.info('# of records in batch: %s' % mh_records['TotalNrOfResults'])
+    log.info('# of records in batch (MediaHaven): %s' % mh_records['TotalNrOfResults'])
     if cmd_args.mtd:
         compare_list = compare_records(
             mtd_records,
@@ -200,6 +219,7 @@ def main(cmd_args):
         x['Internal']['ArchiveStatus'] != ok_status]
     log.debug('nok_list: %s' % len(nok_list))
     write_report(nok_list, cmd_args.batch, 'nok')
+    write_stdout_report(mh_records)
 
 
 if __name__ == '__main__':
