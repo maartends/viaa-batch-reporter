@@ -60,7 +60,7 @@ log.addHandler(file_log)
 # DEFINE SOME CONSTS
 DEFAULT_CFG_FILE = './config.yml'
 with open(DEFAULT_CFG_FILE, 'r') as ymlfile:
-    cfg = yaml.load(ymlfile)
+    cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
 # PRD Public base url
 MH_BASE_URL = cfg['environment']['host']
 

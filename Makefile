@@ -40,6 +40,9 @@ mv-config:
 	mv config.yml.example config.yml
 
 all: init-venv install-req lint mv-config
-	@echo "Succes: see README.md for more information."
+	@echo "***********************************************"
+	@echo "* Succes: see README.md for more information. *"
+	@echo "*         or do 'make help'                   *"
+	@echo "***********************************************"
 
 install: all
