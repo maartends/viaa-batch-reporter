@@ -145,9 +145,10 @@ def write_compare_list(compare_list, batchname):
         writer.writeheader()
         writer.writerows(compare_list)
 
+
 def write_stdout_report(records):
     """Output summary of records statusses to stdout."""
-    statusses = ['on_tape', 'in_progress', 'failed']
+    # statusses = ['on_tape', 'in_progress', 'failed']
     on_tape = len([
         x for x in records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == 'on_tape'])
@@ -199,7 +200,9 @@ def main(cmd_args):
     # Get batch records from MediaHaven
     log.info('Getting batch records from MH "%s"' % cmd_args.batch)
     mh_records = get_batch_records_mh(cmd_args.batch)
-    log.info('# of records in batch (MediaHaven): %s' % mh_records['TotalNrOfResults'])
+    log.info(
+        '# of records in batch (MediaHaven): %s' %
+        mh_records['TotalNrOfResults'])
     if cmd_args.mtd:
         compare_list = compare_records(
             mtd_records,
