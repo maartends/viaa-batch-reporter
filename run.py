@@ -81,7 +81,8 @@ def get_batch_records_mtd(mtd_file):
     """Returns a list"""
     with open(mtd_file, 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
-    return [x for x in reader]
+        list_of_recs = [x for x in reader]
+    return list_of_recs
 
 
 def get_batch_records_mh(batch):
