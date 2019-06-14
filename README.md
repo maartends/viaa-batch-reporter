@@ -63,6 +63,15 @@ Output should be as below.
 
 ## Usage
 
+Before usage of the batch-reporter, the virtual environment should always be
+activated. This is done via:
+
+    $ source bin/activate
+
+After usage, this can be simply deactivated via:
+
+    $ deactivate
+
 Output of `$ ./report -h`:
 
 ```
