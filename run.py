@@ -159,13 +159,19 @@ def write_stdout_report(records):
     failed = len([
         x for x in records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == 'failed'])
-    print('***************************')
-    print('*  on_tape     = %s *' % on_tape)
-    print('*  in_progress = %s *' % in_progress)
-    print('*  failed      = %s *' % failed)
-    print('*  ------------------')
-    print('*  total       = %s *' % sum([on_tape, in_progress, failed]))
-    print('***************************')
+    width = 24
+    star_line = width * '*'
+    print(star_line)
+    line = '* on_tape     = %s' % on_tape
+    print(line.ljust(width-1) + '*')
+    line = '* in_progress = %s' % in_progress
+    print(line.ljust(width-1) + '*')
+    line = '* failed      = %s' % failed
+    print(line.ljust(width-1) + '*')
+    print('* ' + '-'*(width-4) + ' *')
+    line = '* total       = %s' % sum([on_tape, in_progress, failed])
+    print(line.ljust(width-1) + '*')
+    print(star_line)
 
 
 def write_report(records, batchname, status):
