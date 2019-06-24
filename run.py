@@ -26,6 +26,7 @@ import argparse
 import csv
 import re
 import urllib.parse
+from ftplib import FTP
 # 3d party imports
 import yaml
 import requests
@@ -163,14 +164,14 @@ def write_stdout_report(records):
     star_line = width * '*'
     print(star_line)
     line = '* on_tape     = %s' % on_tape
-    print(line.ljust(width-1) + '*')
+    print(line.ljust(width - 1) + '*')
     line = '* in_progress = %s' % in_progress
-    print(line.ljust(width-1) + '*')
+    print(line.ljust(width - 1) + '*')
     line = '* failed      = %s' % failed
-    print(line.ljust(width-1) + '*')
-    print('* ' + '-'*(width-4) + ' *')
+    print(line.ljust(width - 1) + '*')
+    print('* ' + '-' * (width - 4) + ' *')
     line = '* total       = %s' % sum([on_tape, in_progress, failed])
-    print(line.ljust(width-1) + '*')
+    print(line.ljust(width - 1) + '*')
     print(star_line)
 
 
