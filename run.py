@@ -27,6 +27,7 @@ import csv
 import re
 import urllib.parse
 from ftplib import FTP
+import getpass
 # 3d party imports
 import yaml
 import requests
@@ -120,7 +121,7 @@ def get_file_from_ftp(url_parts):
         print(bcolors.WARNING, end="")
         print("No password provided for user '%s'." % url_parts.username)
         print(bcolors.ENDC, end="")
-        pwd = input("Please provide the password: ")
+        pwd = getpass.getpass("Please provide the password: ")
     else:
         pwd = url_parts.password
     filename = get_filename_from_path(url_parts.path)
