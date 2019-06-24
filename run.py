@@ -77,6 +77,8 @@ REQ_SESSION.mount('http://', HTTPAdapter(max_retries=SESS_RETRIES))
 
 CSV_HEADER = ('headers', 'filename', 'tape_label', 'ingest_date')
 
+NOTFOUND_STATUS = 'NOTFOUND'
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -151,7 +153,7 @@ def compare_records(mtd_records, mh_records):
         if mh_rec:
             status = mh_rec.get('Internal').get('ArchiveStatus')
         else:
-            status = 'NOTFOUND'
+            status = NOTFOUND_STATUS
         result.append({
             'filename': filename,
             'status': status,
@@ -193,18 +195,22 @@ def write_compare_list(compare_list, batchname):
         writer.writerows(compare_list)
 
 
-def write_stdout_report(records):
+def write_stdout_report(mh_records, compare_list=[]):
     """Output summary of records statusses to stdout."""
     # statusses = ['on_tape', 'in_progress', 'failed']
     on_tape = len([
-        x for x in records['MediaDataList'] if
+        x for x in mh_records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == 'on_tape'])
     in_progress = len([
-        x for x in records['MediaDataList'] if
+        x for x in mh_records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == 'in_progress'])
     failed = len([
-        x for x in records['MediaDataList'] if
+        x for x in mh_records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == 'failed'])
+    if compare_list:
+        not_found = len([
+            x for x in compare_list if
+            x['status'] == NOTFOUND_STATUS])
     width = 24
     star_line = width * '*'
     print(star_line)
@@ -218,6 +224,10 @@ def write_stdout_report(records):
     line = '* total       = %s' % sum([on_tape, in_progress, failed])
     print(line.ljust(width - 1) + '*')
     print(star_line)
+    if compare_list:
+        line = '* not_found   = %s' % not_found
+        print(line.ljust(width - 1) + '*')
+        print(star_line)
 
 
 def write_report(records, batchname, status):
@@ -256,6 +266,7 @@ def main(cmd_args):
     log.info(
         '# of records in batch (MediaHaven): %s' %
         mh_records['TotalNrOfResults'])
+    compare_list = []
     if cmd_args.mtd:
         compare_list = compare_records(
             mtd_records,
@@ -275,7 +286,7 @@ def main(cmd_args):
         x['Internal']['ArchiveStatus'] != ok_status]
     log.debug('nok_list: %s' % len(nok_list))
     write_report(nok_list, cmd_args.batch, 'nok')
-    write_stdout_report(mh_records)
+    write_stdout_report(mh_records, compare_list=compare_list)
 
 
 if __name__ == '__main__':
