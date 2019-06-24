@@ -78,12 +78,47 @@ REQ_SESSION.mount('http://', HTTPAdapter(max_retries=SESS_RETRIES))
 CSV_HEADER = ('headers', 'filename', 'tape_label', 'ingest_date')
 
 
-def get_batch_records_mtd(mtd_file):
-    """Returns a list"""
+def get_batch_records_mtd(mtd_file_path):
+    """Returns a list of records for a given path to a CSV file.
+       This path can be on the local filesystem or on a remote
+       FTP server.
+    """
+    # Parse the path first
+    url_parts = urllib.parse.urlparse(mtd_file_path)
+    # For now: assume local file path if no scheme was given
+    if not url_parts.scheme:
+        mtd_file = url_parts.path
+    elif url_parts.scheme in ['ftp', 'sftp']:
+        mtd_file = get_file_from_ftp(url_parts)
     with open(mtd_file, 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=',', quotechar='"')
         list_of_recs = [x for x in reader]
     return list_of_recs
+
+
+def get_filename_from_path(path):
+    """"""
+    return path.split("/")[-1:][0]
+
+
+def get_file_from_ftp(url_parts):
+    """"""
+    if not url_parts.password:
+        print("No password provided for user '%s'." % url_parts.username)
+        pwd = input("Please provide the password: ")
+    else:
+        pwd = url_parts.password
+    filename = get_filename_from_path(url_parts.path)
+    local_filepath = '/tmp/%s' % filename
+    conn_params = {
+        "host": url_parts.hostname,
+        "user": url_parts.username,
+        "passwd": pwd
+    }
+    with FTP(**conn_params) as ftp:
+        with open(local_filepath, 'wb') as handle:
+            ftp.retrbinary('RETR %s' % url_parts.path, handle.write)
+    return local_filepath
 
 
 def get_batch_records_mh(batch):
@@ -239,7 +274,8 @@ if __name__ == '__main__':
                                      description="""Report on batches""")
     parser.add_argument(dest='batch', type=str, help='''Specify batchname.''')
     parser.add_argument('-m', '--mtd', dest='mtd',
-                        required=False, help='''Filepath to mtd (csv) file.''')
+                        required=False, help='''Filepath to mtd (csv) file.
+                        Can be local or FTP-path.''')
     cmd_args = parser.parse_args()
     main(cmd_args)
 
