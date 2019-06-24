@@ -77,6 +77,16 @@ REQ_SESSION.mount('http://', HTTPAdapter(max_retries=SESS_RETRIES))
 
 CSV_HEADER = ('headers', 'filename', 'tape_label', 'ingest_date')
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def get_batch_records_mtd(mtd_file_path):
     """Returns a list of records for a given path to a CSV file.
@@ -104,7 +114,7 @@ def get_filename_from_path(path):
 def get_file_from_ftp(url_parts):
     """"""
     if not url_parts.password:
-        print("No password provided for user '%s'." % url_parts.username)
+        print(bcolors.WARNING + "No password provided for user '%s'." % url_parts.username + bcolors.ENDC)
         pwd = input("Please provide the password: ")
     else:
         pwd = url_parts.password
