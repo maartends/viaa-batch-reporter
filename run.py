@@ -79,6 +79,7 @@ CSV_HEADER = ('headers', 'filename', 'tape_label', 'ingest_date')
 
 NOTFOUND_STATUS = 'NOTFOUND'
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -116,7 +117,9 @@ def get_filename_from_path(path):
 def get_file_from_ftp(url_parts):
     """"""
     if not url_parts.password:
-        print(bcolors.WARNING + "No password provided for user '%s'." % url_parts.username + bcolors.ENDC)
+        print(bcolors.WARNING, end="")
+        print("No password provided for user '%s'." % url_parts.username)
+        print(bcolors.ENDC, end="")
         pwd = input("Please provide the password: ")
     else:
         pwd = url_parts.password

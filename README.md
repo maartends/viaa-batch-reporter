@@ -84,7 +84,7 @@ positional arguments:
 
 optional arguments:
   -h, --help         show this help message and exit
-  -m MTD, --mtd MTD  Filepath to mtd (csv) file.
+  -m MTD, --mtd MTD  Filepath to mtd (csv) file. Can be local or FTP-path.
 ```
 
 Before running, the configuration file `config.yml` should be filled in.
@@ -92,4 +92,9 @@ Before running, the configuration file `config.yml` should be filled in.
 Than run with, for example:
 
     $ ./report batch123 --mtd /home/alice/batch123.mtd
+
+The `mtd` parameter takes both a local filepath as well as a fully-qualified
+FTP-path as input. For example:
+
+    $ ./report batch123 --mtd ftp://username@ftp.domain.org/ftphome/alice/batch123.mtd
 
