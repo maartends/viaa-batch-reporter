@@ -1,6 +1,18 @@
 # Batch reporting script
 
-Script to report on batches in the archiving backend.
+Script to report on batches in the archiving back end.
+
+## Synopsis
+
+Files/SIPs can be delivered to meemoo in the form of _batches_: a set of files
+bound together by a certain attribute. Often, this grouping of files is merely
+logical: there might not be a physical reason for these files to belong
+together. It can be convenient however to be able to report on batches as a
+whole rather than on individual files.
+
+For this purpose, an indexed (non-standard) field exists in MediaHaven:
+`Dynamic.dc_identifier_localids.batch`. This field can be queried via the
+`dc_identifier_localidsbatch` query-parameter.
 
 ## Prerequisites
 
@@ -51,7 +63,8 @@ or:
 
       $ pip install -r requirements.txt
 
-- Rename `config.yml.example` to `config.yml`
+- Rename `config.yml.example` to `config.yml` and fill in the
+  configuration-values
 
       $ mv config.yml.example config.yml
 
@@ -89,7 +102,7 @@ optional arguments:
 
 Before running, the configuration file `config.yml` should be filled in.
 
-Than run with, for example:
+Then, run with, for example:
 
     $ ./report batch123 --mtd /home/alice/batch123.mtd
 
