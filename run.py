@@ -37,11 +37,11 @@ from requests.packages.urllib3.util.retry import Retry
 # Create logger
 LOG_FMT = '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(message)s'
 log = logging.getLogger('batch-reporter')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 # create handler and set level to debug
 ch = logging.StreamHandler(stream=sys.stdout)
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 # create formatter
 formatter = logging.Formatter(LOG_FMT)
 # add formatter to ch
@@ -50,7 +50,7 @@ ch.setFormatter(formatter)
 log.addHandler(ch)
 # + file
 file_log = logging.FileHandler(filename='./batch-reporter.log')
-file_log.setLevel(logging.DEBUG)
+file_log.setLevel(logging.INFO)
 # create formatter
 formatter = logging.Formatter(LOG_FMT)
 # add formatter to file_log
@@ -93,9 +93,10 @@ class bcolors:
 
 
 def get_batch_records_mtd(mtd_file_path):
-    """Returns a list of records for a given path to a CSV file.
-       This path can be on the local filesystem or on a remote
+    """Returns a list of records for a given path (full or partial) to a CSV file.
+       This path (when fully qualified) can be on the local filesystem or on a remote
        FTP server.
+       It can also be partial: meaning globbing (`*filename*`) will also work, given that it would result in one and only one result (file).
     """
     # Parse the path first
     url_parts = urllib.parse.urlparse(mtd_file_path)
@@ -109,6 +110,30 @@ def get_batch_records_mtd(mtd_file_path):
         list_of_recs = [x for x in reader]
     return list_of_recs
 
+def glob_filename_with_batch(batch):
+    """"""
+    conn_params = {
+        "host": cfg['ftp']['host'],
+        "user": cfg['ftp']['username'],
+        "passwd": cfg['ftp']['passwd']
+    }
+    print(conn_params)
+    with FTP(**conn_params) as ftp:
+        lf = ftp.nlst('/export/home/OR-vx0628j/incoming/borndigital/Refused/*{batch}*'.format(batch=batch))
+    try:
+        log.debug('File found: {f}'.format(f=lf[0]))
+    except IndexError as e:
+        log.info('No file found with glob pattern "{batch}"'.format(batch=batch))
+        return False
+    else:
+        return lf[0]
+
+def generate_ftp_fqn(file_path):
+    """Returns a fully qualified FTP URL from/with the given file path."""
+    u = cfg['ftp']['username']
+    p = cfg['ftp']['passwd']
+    h = cfg['ftp']['host']
+    return 'ftp://{u}:{p}@{h}{file_path}'.format(u=u, p=p, h=h, file_path=file_path)
 
 def get_filename_from_path(path):
     """"""
@@ -259,10 +284,20 @@ def write_report(records, batchname, status):
 
 
 def main(cmd_args):
+    # Init mtd_records to an empty list: we don't know if we'll find them
+    mtd_records = []
     log.info('Start querying batch "%s"' % cmd_args.batch)
-    if cmd_args.mtd:
-        log.info('Getting batch records from mtd-file: "%s"' % cmd_args.mtd)
-        mtd_records = get_batch_records_mtd(cmd_args.mtd)
+    if cmd_args.glob:
+        log.debug('Globbing with "*%s*"' % cmd_args.batch)
+        file_name = glob_filename_with_batch(cmd_args.batch)
+    #~ if cmd_args.mtd:
+        #~ log.info('Getting batch records from mtd-file: "%s"' % cmd_args.mtd)
+        #~ mtd_records = get_batch_records_mtd(cmd_args.mtd)
+        #~ log.info('# of records in mtd-file: %s' % len(mtd_records))
+    if file_name:
+        mtd_fqn = generate_ftp_fqn(file_name)
+        log.info('Getting batch records from mtd-file: "%s"' % file_name)
+        mtd_records = get_batch_records_mtd(mtd_fqn)
         log.info('# of records in mtd-file: %s' % len(mtd_records))
     # Get batch records from MediaHaven
     log.info('Getting batch records from MH "%s"' % cmd_args.batch)
@@ -271,7 +306,7 @@ def main(cmd_args):
         '# of records in batch (MediaHaven): %s' %
         mh_records['TotalNrOfResults'])
     compare_list = []
-    if cmd_args.mtd:
+    if mtd_records:
         compare_list = compare_records(
             mtd_records,
             mh_records['MediaDataList']
@@ -298,6 +333,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="batch-reporter",
                                      description="""Report on batches""")
     parser.add_argument(dest='batch', type=str, help='''Specify batchname.''')
+    parser.add_argument('-g', '--glob-file', action='store_true',
+                        dest='glob', required=False, help='''Find mtd file
+                        through glob-pattern.  If set, I'll try to find the
+                        mtd-file based on the batch name. Defaults to false.''')
     parser.add_argument('-m', '--mtd', dest='mtd',
                         required=False, help='''Filepath to mtd (csv) file.
                         Can be local or FTP-path.''')

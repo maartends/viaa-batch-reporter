@@ -81,14 +81,10 @@ activated. This is done via:
 
     $ source bin/activate
 
-After usage, this can be simply deactivated via:
-
-    $ deactivate
-
 Output of `$ ./report -h`:
 
 ```
-usage: batch-reporter [-h] [-m MTD] batch
+usage: batch-reporter [-h] [-g] [-m MTD] batch
 
 Report on batches
 
@@ -97,6 +93,9 @@ positional arguments:
 
 optional arguments:
   -h, --help         show this help message and exit
+  -g, --glob-file    Find mtd file through glob-pattern. If set, I'll try to
+                     find the mtd-file based on the batch name. Defaults to
+                     false.
   -m MTD, --mtd MTD  Filepath to mtd (csv) file. Can be local or FTP-path.
 ```
 
@@ -111,3 +110,19 @@ FTP-path as input. For example:
 
     $ ./report batch123 --mtd ftp://username@ftp.domain.org/ftphome/alice/batch123.mtd
 
+You can also only provide the name of the batch and set the `-g` (or
+`--glob-file`) flag to let the script look up the corresponding mtd-file on the
+FTP-server. For example:
+
+	$ ./report batch123 --glob
+
+**Pro tip**: If you have a lot of batches to check, this bash one-liner can help you out:
+
+	$ while read -r BATCH; do ./report ${BATCH} --glob; done < list-of-batches.txt
+
+Where the file `list-of-batches.txt` is a text file containing all the batches
+you want to check, each one on a seperate line.
+
+After usage, the virtual environment can be simply deactivated via:
+
+    $ deactivate
