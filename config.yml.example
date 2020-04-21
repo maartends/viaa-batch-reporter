@@ -15,3 +15,9 @@ request:
          accept: application/vnd.mediahaven.v2+json
     # integer: default timeout value, in seconds, for every request, eg. 10
     timeout: 10
+# Parameters for the FTP host where the reference index file is located. Ie,
+# the "mtd-file"
+ftp:
+    host: 
+    username:
+    passwd:
