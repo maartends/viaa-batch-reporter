@@ -62,7 +62,12 @@ log.addHandler(file_log)
 # DEFINE SOME CONSTS
 DEFAULT_CFG_FILE = './config.yml'
 with open(DEFAULT_CFG_FILE, 'r') as ymlfile:
-    cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+    try:
+        cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
+    except AttributeError as e:
+        print("yaml version should be at least 5.1. Did you forget to `source bin/activate`?")
+        raise
+
 # PRD Public base url
 MH_BASE_URL = cfg['environment']['host']
 
