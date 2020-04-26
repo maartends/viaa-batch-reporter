@@ -172,6 +172,7 @@ def get_batch_records_mh(batch):
     query_params = {"q": "+(dc_identifier_localidsbatch:%s)" % batch,
                     "nrOfResults": 10000}
     response = REQ_SESSION.get(MH_BASE_URL, params=query_params)
+    assert response.status_code == 200, "Response status code was: %s" % response.status_code
     j = response.json()
     return j
 
