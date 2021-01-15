@@ -292,10 +292,12 @@ def write_report(records, batchname, status):
 def main(cmd_args):
     # Init mtd_records to an empty list: we don't know if we'll find them
     mtd_records = []
-    log.info('Start querying batch "%s"' % cmd_args.batch)
+    # strip() batchname for possible line endings on different OS (Win)
+    batchname = cmd_args.batch.strip()
+    log.info('Start querying batch "%s"' % batchname)
     if cmd_args.glob:
-        log.debug('Globbing with "*%s*"' % cmd_args.batch)
-        file_name = glob_filename_with_batch(cmd_args.batch)
+        log.debug('Globbing with "*%s*"' % batchname)
+        file_name = glob_filename_with_batch(batchname)
     #~ if cmd_args.mtd:
         #~ log.info('Getting batch records from mtd-file: "%s"' % cmd_args.mtd)
         #~ mtd_records = get_batch_records_mtd(cmd_args.mtd)
@@ -306,8 +308,8 @@ def main(cmd_args):
         mtd_records = get_batch_records_mtd(mtd_fqn)
         log.info('# of records in mtd-file: %s' % len(mtd_records))
     # Get batch records from MediaHaven
-    log.info('Getting batch records from MH "%s"' % cmd_args.batch)
-    mh_records = get_batch_records_mh(cmd_args.batch)
+    log.info('Getting batch records from MH "%s"' % batchname)
+    mh_records = get_batch_records_mh(batchname)
     log.info(
         '# of records in batch (MediaHaven): %s' %
         mh_records['TotalNrOfResults'])
@@ -317,20 +319,20 @@ def main(cmd_args):
             mtd_records,
             mh_records['MediaDataList']
         )
-        write_compare_list(compare_list, cmd_args.batch)
+        write_compare_list(compare_list, batchname)
     ok_status = cfg['ok_status']
     # Get oks
     ok_list = [
         x for x in mh_records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] == ok_status]
     log.debug('ok_list: %s' % len(ok_list))
-    write_report(ok_list, cmd_args.batch, 'ok')
+    write_report(ok_list, batchname, 'ok')
     # Get noks
     nok_list = [
         x for x in mh_records['MediaDataList'] if
         x['Internal']['ArchiveStatus'] != ok_status]
     log.debug('nok_list: %s' % len(nok_list))
-    write_report(nok_list, cmd_args.batch, 'nok')
+    write_report(nok_list, batchname, 'nok')
     write_stdout_report(mh_records, compare_list=compare_list)
 
 
