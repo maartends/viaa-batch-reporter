@@ -39,7 +39,7 @@ mv-config:
 	@echo "[MV-CONFIG]: Rename 'config.yml.example' to 'config.yml'..."
 	cp config.yml.example config.yml
 
-all: init-venv install-req lint mv-config
+all: init-venv install-req mv-config
 	@echo "***********************************************"
 	@echo "* Succes: see README.md for more information. *"
 	@echo "*         or do 'make help'                   *"
